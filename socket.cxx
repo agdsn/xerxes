@@ -6,7 +6,6 @@
  * Maximilian Marx <mmarx@wh2.tu-dresden.de>
  */
 
-#include <stdexcept>
 #include <unistd.h>
 #include "socket.hxx"
 
@@ -21,6 +20,11 @@ namespace xerxes
       {
 	throw std::runtime_error("could not create socket.");
       }
+  }
+
+  Socket::Socket(int new_fd)
+  {
+    fd = new_fd;
   }
 
   Socket::~Socket()
@@ -43,12 +47,18 @@ namespace xerxes
     return ::listen(socket.fd, backlog);
   }
   
-  int
+  boost::shared_ptr<Socket>
   accept(Socket& socket, 
 	 sockaddr* address,
 	 socklen_t* address_len)
   {
-    return ::accept(socket.fd, address, address_len);
+     int new_fd = ::accept(socket.fd, address, address_len);
+     if(new_fd == -1)
+       {
+	 throw std::runtime_error("could not accept socket.");
+       }
+
+     return boost::shared_ptr<Socket>(new Socket(new_fd));  
   }
 
   int

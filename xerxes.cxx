@@ -13,15 +13,112 @@
 #include <netdb.h>
 #include "socket.hxx"
 #include "epoll.hxx"
+#include <boost/utility.hpp>
+#include <boost/any.hpp>
+#include <boost/regex.hpp>
+#include <boost/program_options.hpp>
+#include <vector>
+
+enum sock_opt_types{
+  TCP,
+  UNIX
+};
+
+class SocketOption {
+  public:
+
+  SocketOption(std::string new_file)
+    : type(UNIX), file(new_file)
+  {
+  }
+  SocketOption(std::string new_hostname, int new_port)
+    : type(TCP), hostname(new_hostname), port(new_port)
+  {
+  }
+
+  int type;
+  std::string file;
+  std::string hostname;
+  int port;
+};
+
+
+void validate(boost::any& v, 
+              const std::vector<std::string>& values,
+              SocketOption* target_type, int)
+{
+    //static boost::regex r("(tcp|unix):([\\d\\w_-/.]+)(:(\\d+))?");
+    static boost::regex r("(tcp|unix):(([\\d\\w_-]|\\.|/)+)(:(\\d+))?");
+
+    using namespace boost::program_options;
+    using namespace std;
+
+    // Make sure no previous assignment to 'a' was made.
+    validators::check_first_occurrence(v);
+    // Extract the first string from 'values'. If there is more than
+    // one string, it's an error, and exception will be thrown.
+    const std::string& s = validators::get_single_string(values);
+
+    // Do regex match and convert the interesting part to 
+    // int.
+    boost::smatch match;
+    if (regex_match(s, match, r)) {
+	cout << "1: " << match[1] << endl; // Type
+	cout << "2: " << match[2] << endl; // File-/Hostname
+	cout << "5: " << match[5] << endl; // Port
+	
+	v = any(SocketOption())
+        //v = any(magic_number(boost::lexical_cast<int>(match[1])));
+    } else {
+        throw validation_error("invalid value");
+    }        
+}
+
+
 
 int
 main(int argc, char* argv[])
 {
+  namespace po = boost::program_options;
   using namespace std;
   using namespace xerxes;
   cout << "Hello, World!" << endl
        << "ich kanns auch lassen, hier `Hello, World!' zu schreiben..." 
        << endl;
+
+
+
+// Declare the supported options.
+po::options_description desc("Allowed options");
+desc.add_options()
+    ("help", "produce help message")
+    ("src", po::value<SocketOption>(), "Source")
+    ("dst", po::value<SocketOption>(), "Destination")
+;
+
+po::variables_map vm;
+po::store(po::parse_command_line(argc, argv, desc), vm);
+po::notify(vm);    
+
+if (vm.count("help")) {
+    cout << desc << "\n";
+    return 1;
+}
+
+if (vm.count("src")) {
+//    SocketOption sock = vm["src"].as<SocketOption>;
+//    if(sock.type == TCP){
+//    cout << "TCP Source is " << sock.hostname << "," << sock.port << ".\n";
+//    }
+} else {
+    cout << "Source was not set.\n";
+}
+
+
+
+
+
+
 
   Socket lstn(PF_INET, SOCK_STREAM, 0);
 

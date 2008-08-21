@@ -62,6 +62,7 @@ namespace xerxes
   int
   send(Socket& socket,
        MysqlData& data,
+       int len,
        int flags);
 
   int
@@ -95,7 +96,7 @@ namespace xerxes
     {
       events[source.fd] = event_t(new epoll_event);
       events[target.fd] = event_t(new epoll_event);
-      events[source.fd]->events = EPOLLIN;
+      events[source.fd]->events = EPOLLIN
       	| EPOLLPRI | EPOLLERR | EPOLLHUP;
       events[target.fd]->events = events[source.fd]->events;
       events[source.fd]->data.fd = target.fd;
@@ -126,6 +127,10 @@ namespace xerxes
     int fd;
     std::map<int, event_t> events;
   };
+
+  class SocketErr{};
+  class ConResetErr: public SocketErr{};
+  class ConDataErr: public SocketErr{};
 }
 
 #endif

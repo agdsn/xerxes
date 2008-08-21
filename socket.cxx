@@ -74,15 +74,34 @@ namespace xerxes
        MysqlData& data,
        int flags)
   {
-    return ::recv(socket.fd, data.first.get(), data.second, flags);
+    int ret = ::recv(socket.fd, data.first.get(), data.second, flags);
+    if(ret == 0)
+      {
+        throw ConResetErr();
+      }
+    if(ret < 0)
+      {
+        throw ConDataErr();
+      }
+    return ret;
   }
 
   int
   send (Socket& socket,
 	MysqlData& data,
+	int len,
 	int flags)
   {
-    return ::send(socket.fd, data.first.get(), data.second, flags);
+    int ret = ::send(socket.fd, data.first.get(), len, flags);
+    if(ret == 0)
+      {
+        throw ConResetErr();
+      }
+    if(ret < 0)
+      {
+        throw ConDataErr();
+      }
+    return ret;
   }
 
   int

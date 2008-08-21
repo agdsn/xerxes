@@ -41,6 +41,10 @@ main(int argc, char* argv[])
   freeaddrinfo(res);
 
   int ret = listen(lstn, 3);
+  if( ret != 0)
+    {
+      exit(1);
+    }
 
   EPoll epoll;
   epoll.add(lstn);
@@ -48,6 +52,8 @@ main(int argc, char* argv[])
   const int max_events = 23;
   boost::shared_array<epoll_event> events(new epoll_event[max_events]);
   std::map<int, boost::shared_ptr<Socket> > sockets;
+
+  MysqlData buffer = makeData(1024);
 
   for(;;)
     {
@@ -70,11 +76,9 @@ main(int argc, char* argv[])
 	      hints.ai_socktype = SOCK_STREAM;
 	      hints.ai_protocol = IPPROTO_TCP;
 	      hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
-
 	      getaddrinfo("127.0.0.1", "3306", &hints, &res);
-
+	      //getaddrinfo("127.0.0.1", "25", &hints, &res);
               connect(*target, res->ai_addr, res->ai_addrlen);
-
 	      freeaddrinfo(res);
 
 	      sockets[target->fd] = target;
@@ -85,9 +89,47 @@ main(int argc, char* argv[])
 
               epoll.add(*source, *target);
 	    }
-	  else{ cout << "hollo!" << events[i].data.fd << endl; }
-	}
-    }
-
+	  else
+	    {
+	      //lookup
+	      boost::shared_ptr<Socket> target(sockets[events[i].data.fd]);
+	      boost::shared_ptr<Socket> source(sockets[epoll.events[target->fd]->data.fd]);
+	      if((events[i].events & EPOLLIN )
+	         || (events[i].events & EPOLLPRI))
+		{
+		  // read -> write
+		  cout << "writer: "<< source->fd << endl;
+		  cout << "reader: "<< target->fd << endl;
+		  try
+		    {
+                      int len = recv(*source, buffer, 0);
+		      send(*target, buffer, len, 0);
+                      
+		    }
+		  catch (SocketErr e)
+		    {
+		      // hangup
+		      cout << "Socket Error, closing " <<  target->fd << " and " << source->fd << endl;
+		      epoll.del(target->fd);
+		      epoll.del(source->fd);
+		      sockets.erase(target->fd);
+		      sockets.erase(source->fd);
+                      continue;
+		    }
+		}
+	      if((events[i].events & EPOLLERR)
+	         || (events[i].events & EPOLLHUP))
+		{
+		  // hangup
+		  cout << target->fd << " closed by " << source->fd << endl;
+		  epoll.del(target->fd);
+		  epoll.del(source->fd);
+		  sockets.erase(target->fd);
+		  sockets.erase(source->fd);
+                  continue;
+		}
+	    }
+         }
+      }
   return 0;
 }

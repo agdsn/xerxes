@@ -1,4 +1,4 @@
-OBJECTS=xerxes.cxx socket.cxx
+OBJECTS=xerxes.cxx socket.cxx epoll.cxx
 BIN=xerxes
 
 $(BIN): $(OBJECTS)

@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "socket.hxx"
+#include "epoll.hxx"
 
 int
 main(int argc, char* argv[])

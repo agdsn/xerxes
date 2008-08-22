@@ -7,7 +7,7 @@
  */	
 
 /**
- * TODO : Fix crash on disconnect
+ * TODO : Unix Socket testing
  * TODO : Do some Error handling
  */
 
@@ -118,6 +118,7 @@ main(int argc, char* argv[])
               connect_inet(*target, dst);
 	      sockets[target->fd] = target;
 
+              cerr << "accept!" << endl;
 	      boost::shared_ptr<Socket> source(accept(lstn, 0, 0));
 
 	      sockets[source->fd] = source;
@@ -126,6 +127,11 @@ main(int argc, char* argv[])
 	    }
 	  else
 	    {
+	      if(sockets[events[i].data.fd] == 0) 
+	        {
+		  cerr << "already closed, ignore" << endl;
+		  continue;
+		}
 	      //lookup
 	      boost::shared_ptr<Socket> target(sockets[events[i].data.fd]);
 	      boost::shared_ptr<Socket> source(sockets[epoll.events[target->fd]->data.fd]);
@@ -149,6 +155,7 @@ main(int argc, char* argv[])
 		      epoll.del(source->fd);
 		      sockets.erase(target->fd);
 		      sockets.erase(source->fd);
+		      cerr << "closed" << endl;
                       continue;
 		    }
 		}

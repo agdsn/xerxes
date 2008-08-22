@@ -32,6 +32,11 @@ namespace xerxes
   Socket::Socket(int new_fd)
   {
     fd = new_fd;
+    if(fd < 0)
+      {
+        perror("--");
+	throw std::runtime_error("could not create socket.");
+      }
   }
 
   Socket::~Socket()

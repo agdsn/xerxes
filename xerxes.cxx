@@ -31,7 +31,7 @@ class SocketOption {
     : type(UNIX), file(new_file)
   {
   }
-  SocketOption(std::string new_hostname, int new_port)
+  SocketOption(std::string new_hostname, std::string new_port)
     : type(TCP), hostname(new_hostname), port(new_port)
   {
   }
@@ -39,7 +39,7 @@ class SocketOption {
   int type;
   std::string file;
   std::string hostname;
-  int port;
+  std::string port;
 };
 
 
@@ -62,16 +62,26 @@ void validate(boost::any& v,
     // Do regex match and convert the interesting part to 
     // int.
     boost::smatch match;
-    if (regex_match(s, match, r)) {
-	cout << "1: " << match[1] << endl; // Type
+    if(regex_match(s, match, r)) 
+      {
+        cout << "1: " << match[1] << endl; // Type
 	cout << "2: " << match[2] << endl; // File-/Hostname
 	cout << "5: " << match[5] << endl; // Port
-	
-	v = any(SocketOption())
-        //v = any(magic_number(boost::lexical_cast<int>(match[1])));
-    } else {
+        if(match[1] == "tcp")
+	  {
+	    cout << "TCP" << endl;
+	    v = boost::any(SocketOption(match[2], match[5]));
+	  }
+	else
+	  {
+	    cout << "UNIX" << endl;
+	    v = boost::any(SocketOption(match[2]));
+	  }
+      } 
+    else 
+      {
         throw validation_error("invalid value");
-    }        
+      }        
 }
 
 
@@ -106,10 +116,15 @@ if (vm.count("help")) {
 }
 
 if (vm.count("src")) {
-//    SocketOption sock = vm["src"].as<SocketOption>;
-//    if(sock.type == TCP){
-//    cout << "TCP Source is " << sock.hostname << "," << sock.port << ".\n";
-//    }
+    SocketOption sock = vm["src"].as<SocketOption>();
+    if(sock.type == TCP)
+      {
+        cout << "TCP Source is " << sock.hostname << "," << sock.port << ".\n";
+      }
+    else
+      {
+        cout << "UNIX Source is " << sock.file << ".\n";
+      }
 } else {
     cout << "Source was not set.\n";
 }
@@ -117,7 +132,7 @@ if (vm.count("src")) {
 
 
 
-
+exit(0);
 
 
   Socket lstn(PF_INET, SOCK_STREAM, 0);

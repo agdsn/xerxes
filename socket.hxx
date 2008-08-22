@@ -15,6 +15,9 @@
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/any.hpp>
+#include <boost/regex.hpp>
+#include <boost/program_options.hpp>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
@@ -41,6 +44,31 @@ namespace xerxes
   MysqlData 
   makeData(int len);
 
+  enum sock_opt_types
+  {
+    TCP,
+    UNIX
+  };
+
+  class SocketOption 
+  {
+    public:
+
+    SocketOption(std::string new_file);
+    SocketOption(std::string new_hostname, std::string new_port);
+
+    Socket* gen_socket();
+
+    int type;
+    std::string file;
+    std::string hostname;
+    std::string port;
+  };
+
+  void validate(boost::any& v, 
+                const std::vector<std::string>& values,
+                SocketOption* target_type, int);
+
   boost::shared_ptr<Socket>
   accept(Socket& socket, 
 	 sockaddr* address,
@@ -53,6 +81,14 @@ namespace xerxes
   connect(Socket& socket,
 	  sockaddr const* const serv_address,
 	  socklen_t address_len);
+
+  int
+  connect_inet(Socket& socket,
+          SocketOption& opt);
+
+  int
+  connect_unix(Socket& socket,
+          SocketOption& opt);
 
   int
   recv(Socket& socket,
@@ -70,6 +106,13 @@ namespace xerxes
        sockaddr const* const bind_address,
        socklen_t addrlen);
 
+  int
+  bind_inet(Socket& socket,
+       SocketOption& opt);
+
+  int
+  bind_unix(Socket& socket,
+       SocketOption& opt);
 
   class SocketErr{};
   class ConResetErr: public SocketErr{};

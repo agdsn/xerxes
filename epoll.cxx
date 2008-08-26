@@ -14,7 +14,8 @@ namespace xerxes
   {
     if(fd < 0)
       {
-        throw std::runtime_error("could not create epoll descriptor.");
+        throw EpollCreateErr();
+        //throw std::runtime_error("could not create epoll descriptor.");
       }
   }
   
@@ -38,8 +39,10 @@ namespace xerxes
     events[source.fd]->data.fd = target.fd;
     events[target.fd]->data.fd = source.fd;
     
-    epoll_ctl(fd, EPOLL_CTL_ADD, source.fd, events[source.fd].get());
-    epoll_ctl(fd, EPOLL_CTL_ADD, target.fd, events[target.fd].get());
+    if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, source.fd, events[source.fd].get()))
+      throw EpollAddErr(); 
+    if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, target.fd, events[target.fd].get()))
+      throw EpollAddErr();
   }
 
   void
@@ -49,14 +52,16 @@ namespace xerxes
     events[socket.fd]->events = EPOLLIN;
     events[socket.fd]->data.fd = -1;
 
-    epoll_ctl(fd, EPOLL_CTL_ADD, socket.fd, events[socket.fd].get());
+    if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, socket.fd, events[socket.fd].get()))
+      throw EpollAddErr();
   }
 
   void
   EPoll::del(Socket const& socket)
   {
-    epoll_ctl(fd, EPOLL_CTL_DEL, socket.fd, 0);
-    
+    if(0 != epoll_ctl(fd, EPOLL_CTL_DEL, socket.fd, 0))
+      throw EpollAddErr();
     events.erase(socket.fd);
   }
+  
 }

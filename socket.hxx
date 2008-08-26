@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <iostream>
 
 namespace xerxes
 {
@@ -114,9 +115,46 @@ namespace xerxes
   bind_unix(Socket& socket,
        SocketOption& opt);
 
-  class SocketErr{};
-  class ConResetErr: public SocketErr{};
-  class ConDataErr: public SocketErr{};
+  class SocketErr{
+    public:
+    SocketErr(std::string err);
+    SocketErr();
+  };
+  class ConResetErr: public SocketErr
+  {
+    public:
+    ConResetErr() :SocketErr("Connection resetted."){};
+  };
+  class ConDataErr: public SocketErr
+  {
+    public:
+    ConDataErr() :SocketErr("could send/recv Data."){};
+  };
+  class ConnCreateErr: public SocketErr 
+  {
+    public:
+    ConnCreateErr() :SocketErr("could not create socket."){};
+  };
+  class ConnListenErr: public SocketErr 
+  {
+    public:
+    ConnListenErr() :SocketErr("could not listen on socket."){};
+  };
+  class ConnAcceptErr: public SocketErr 
+  {
+    public:
+    ConnAcceptErr() :SocketErr("could not accept on socket."){};
+  };
+  class ConnConnectErr: public SocketErr 
+  {
+    public:
+    ConnConnectErr() :SocketErr("could not connect to socket."){};
+  };
+  class ConnBindErr: public SocketErr 
+  {
+    public:
+    ConnBindErr() :SocketErr("could not bind on socket."){};
+  };
 }
 
 #endif

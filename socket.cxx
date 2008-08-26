@@ -12,7 +12,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "socket.hxx"
-#include <iostream>
 
 namespace xerxes
 {
@@ -24,8 +23,7 @@ namespace xerxes
     std::cerr << "new socket" << std::endl;
     if(fd < 0)
       {
-        perror("--");
-	throw std::runtime_error("could not create socket.");
+	throw ConnCreateErr();
       }
   }
 
@@ -34,8 +32,7 @@ namespace xerxes
     fd = new_fd;
     if(fd < 0)
       {
-        perror("--");
-	throw std::runtime_error("could not create socket.");
+	throw ConnCreateErr();
       }
   }
 
@@ -110,7 +107,12 @@ namespace xerxes
   int
   listen(Socket& socket, int backlog)
   {
-    return ::listen(socket.fd, backlog);
+    int ret = ::listen(socket.fd, backlog);
+    if (ret != 0)
+      {
+        throw ConnListenErr();
+      }
+    return ret;
   }
   
   boost::shared_ptr<Socket>
@@ -121,7 +123,7 @@ namespace xerxes
      int new_fd = ::accept(socket.fd, address, address_len);
      if(new_fd == -1)
        {
-	 throw std::runtime_error("could not accept socket.");
+	 throw ConnAcceptErr();
        }
 
      return boost::shared_ptr<Socket>(new Socket(new_fd));  
@@ -132,7 +134,12 @@ namespace xerxes
 	  sockaddr const* const serv_addr,
 	  socklen_t addrlen)
   {
-    return ::connect(socket.fd, serv_addr, addrlen);
+    int ret = ::connect(socket.fd, serv_addr, addrlen);
+    if (ret != 0)
+      {
+        throw ConnConnectErr();
+      } 
+    return ret;
   }
 
   int
@@ -190,7 +197,7 @@ namespace xerxes
 	int flags)
   {
     int ret = ::send(socket.fd, data.first.get(), len, flags);
-    if(ret == 0)
+    if(ret == 0 && len != 0)
       {
         throw ConResetErr();
       }
@@ -206,7 +213,12 @@ namespace xerxes
        sockaddr const* const bind_address,
        socklen_t addrlen)
   {
-    return ::bind(socket.fd, bind_address, addrlen);
+    int ret = ::bind(socket.fd, bind_address, addrlen);
+    if(ret != 0)
+      {
+        throw ConnBindErr();
+      }
+    return ret;
   }
 
   int
@@ -244,5 +256,13 @@ namespace xerxes
     adr.sun_family = AF_UNIX;
     strncpy(adr.sun_path, opt.file.c_str(), sizeof(adr.sun_path));
     return bind(socket, (struct sockaddr *) &adr, SUN_LEN(&adr));
+  }
+
+  SocketErr::SocketErr(){
+    SocketErr("unknown");
+  }
+  SocketErr::SocketErr(std::string err){
+    std::cerr << "Socket Exception: " << err << std::endl;
+    perror("ERROR:");
   }
 }

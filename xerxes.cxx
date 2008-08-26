@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <signal.h>
 #include "socket.hxx"
 #include "epoll.hxx"
 #include <boost/utility.hpp>
@@ -34,6 +35,7 @@ main(int argc, char* argv[])
        << endl;
 
 
+  signal(SIGPIPE, SIG_IGN);
 
   // Declare the supported options.
   po::options_description desc("Allowed options");
@@ -77,7 +79,7 @@ main(int argc, char* argv[])
       }
 
   SocketOption src = vm["src"].as<SocketOption>();
-      Socket &lstn =  *(src.gen_socket());
+  Socket &lstn =  *(src.gen_socket());
   if(src.type == TCP)
     {
       cout << "TCP Source is " << src.hostname << "," << src.port << ".\n";

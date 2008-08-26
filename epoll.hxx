@@ -41,5 +41,24 @@ namespace xerxes
     int fd;
     std::map<int, event_t> events;
   };
+
+  enum epoll_add_err_type{
+    ADD_ERR_SINGLE,
+    ADD_ERR_SOURCE,
+    ADD_ERR_TARGET
+  };
+
+  class EpollErr{};
+  class EpollAddErr : public EpollErr {
+    public:
+    EpollAddErr(){
+      EpollAddErr(ADD_ERR_SINGLE);
+    };
+    EpollAddErr(epoll_add_err_type t)
+      :type(t){};
+    epoll_add_err_type type;
+  };
+  class EpollDelErr : public EpollErr {};
+  class EpollCreateErr : public EpollErr {};
 }
 #endif

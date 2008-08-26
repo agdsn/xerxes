@@ -7,6 +7,7 @@
  */
 
 #include "epoll.hxx"
+#include "xerxes.hxx"
 
 namespace xerxes
 {
@@ -15,7 +16,10 @@ namespace xerxes
     if(fd < 0)
       {
         throw EpollCreateErr();
-        //throw std::runtime_error("could not create epoll descriptor.");
+      }
+    if(be_debug)
+      {
+        std::cout << "epoll fd created" << std::endl;
       }
   }
   
@@ -24,6 +28,10 @@ namespace xerxes
     if(fd > 0)
       {
         close(fd);
+      }
+    if(be_debug)
+      {
+        std::cout << "epoll closed" << std::endl;
       }
   }
 
@@ -43,6 +51,10 @@ namespace xerxes
       throw EpollAddErr(EPOLL_ADD_ERR_SOURCE); 
     if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, target.fd, events[target.fd].get()))
       throw EpollAddErr(EPOLL_ADD_ERR_TARGET);
+    if(be_debug)
+      {
+        std::cout << "fd " << target.fd << " and fd " << source.fd << " added to epoll" << std::endl;
+      }
   }
 
   void
@@ -54,6 +66,10 @@ namespace xerxes
 
     if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, socket.fd, events[socket.fd].get()))
       throw EpollAddErr();
+    if(be_debug)
+      {
+        std::cout << "fd " << socket.fd << " added to epoll" << std::endl;
+      }
   }
 
   void
@@ -62,6 +78,10 @@ namespace xerxes
     if(0 != epoll_ctl(fd, EPOLL_CTL_DEL, socket.fd, 0))
       throw EpollAddErr();
     events.erase(socket.fd);
+    if(be_debug)
+      {
+        std::cout << "fd " << socket.fd << " deleted from epoll" << std::endl;
+      }
   }
 
   EpollErr::EpollErr()
@@ -71,8 +91,11 @@ namespace xerxes
 
   EpollErr::EpollErr(std::string err)
   {
-    std::cerr << "Epoll Error: " << err << std::endl;
-    perror("ERRNO");
+    if(!be_quiet)
+      {
+        std::cerr << "Epoll Error: " << err << std::endl;
+        perror("ERRNO");
+      }
   }
   EpollAddErr::EpollAddErr()
     {

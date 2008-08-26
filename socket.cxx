@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "socket.hxx"
+#include "xerxes.hxx"
 
 namespace xerxes
 {
@@ -23,6 +24,10 @@ namespace xerxes
     if(fd < 0)
       {
 	throw ConnCreateErr();
+      }
+    if(be_debug)
+      {
+        std::cout << "socket with fd " << fd << " created" << std::endl;
       }
   }
 
@@ -40,6 +45,10 @@ namespace xerxes
     if(fd)
       {
 	close(fd);
+        if(be_debug)
+          {
+            std::cout << "socket with fd " << fd << " closed" << std::endl;
+          }
       }
   }
 
@@ -100,6 +109,10 @@ namespace xerxes
   MysqlData 
   makeData(int len)
   {
+    if(be_debug)
+      {
+        std::cout << "Init transfer Buffer" << std::endl;
+      }
     return MysqlData(buffer_t(new char[len]), len);
   }
 
@@ -110,6 +123,10 @@ namespace xerxes
     if (ret != 0)
       {
         throw ConnListenErr();
+      }
+    if(be_debug)
+      {
+        std::cout << "listen on socket" << std::endl;
       }
     return ret;
   }
@@ -124,6 +141,10 @@ namespace xerxes
        {
 	 throw ConnAcceptErr();
        }
+    if(be_debug)
+      {
+        std::cout << "connection accepted" << std::endl;
+      }
 
      return boost::shared_ptr<Socket>(new Socket(new_fd));  
   }
@@ -138,6 +159,10 @@ namespace xerxes
       {
         throw ConnConnectErr();
       } 
+    if(be_debug)
+      {
+        std::cout << "socket connected" << std::endl;
+      }
     return ret;
   }
 
@@ -145,6 +170,10 @@ namespace xerxes
   connect_inet(Socket& socket,
           SocketOption& opt)
   {
+    if(be_debug)
+      {
+        std::cout << "connect inet to: " << opt.hostname << ":" << opt.port << std::endl;
+      }
     addrinfo hints;
     addrinfo* res;
 
@@ -164,8 +193,11 @@ namespace xerxes
   connect_unix(Socket& socket,
             SocketOption& opt)
   {
+    if(be_debug)
+      {
+        std::cout << "connect unix to: " << opt.file << std::endl;
+      }
     struct sockaddr_un adr;
-
     memset(&adr, 0, sizeof(adr));
     adr.sun_family = AF_UNIX;
     strncpy(adr.sun_path, opt.file.c_str(), sizeof(adr.sun_path));
@@ -186,6 +218,11 @@ namespace xerxes
       {
         throw ConDataErr();
       }
+    if(be_debug)
+      {
+        std::cout << "recived " << ret << " bytes from fd " << socket.fd << std::endl;
+      }
+
     return ret;
   }
 
@@ -196,13 +233,18 @@ namespace xerxes
 	int flags)
   {
     int ret = ::send(socket.fd, data.first.get(), len, flags);
-    if(ret == 0 && len != 0)
+    if((ret == 0 && len != 0) || len != ret)
       {
         throw ConResetErr();
       }
     if(ret < 0)
       {
         throw ConDataErr();
+      }
+    
+    if(be_debug)
+      {
+        std::cout << "sended " << ret << " of " << len << " bytes to " << socket.fd << std::endl;
       }
     return ret;
   }
@@ -217,6 +259,12 @@ namespace xerxes
       {
         throw ConnBindErr();
       }
+
+    if(be_debug)
+      {
+        std::cout << "socket bound" << std::endl;
+      }
+
     return ret;
   }
 
@@ -224,6 +272,10 @@ namespace xerxes
   bind_inet(Socket& socket,
        SocketOption& opt)
   {
+    if(be_debug)
+      {
+        std::cout << "bind inet socket to: " << opt.hostname << ":" << opt.port << std::endl;
+      }
     addrinfo hints;
     addrinfo* res;
 
@@ -250,10 +302,14 @@ namespace xerxes
   bind_unix(Socket& socket,
        SocketOption& opt)
   {
+    if(be_debug)
+      {
+        std::cout << "bind unix socket to: " << opt.file << std::endl;
+      }
+
     unlink(opt.file.c_str());
     
     struct sockaddr_un adr;
-
     memset(&adr, 0, sizeof(adr));
     adr.sun_family = AF_UNIX;
     strncpy(adr.sun_path, opt.file.c_str(), sizeof(adr.sun_path));
@@ -264,7 +320,10 @@ namespace xerxes
     SocketErr("unknown");
   }
   SocketErr::SocketErr(std::string err){
-    std::cerr << "Socket Exception: " << err << std::endl;
-    perror("ERRNO");
+    if(!be_quiet)
+      {
+        std::cerr << "Socket Exception: " << err << std::endl;
+        perror("ERRNO");
+      }
   }
 }

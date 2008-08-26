@@ -7,8 +7,7 @@
  */	
 
 /**
- * TODO : Unix Socket testing
- * TODO : Do some Error handling
+ * TODO : Closing of dockets does not work korrect
  */
 
 #include <iostream>
@@ -22,7 +21,8 @@
 #include <vector>
 
 
-
+int be_quiet = 0;
+int be_debug = 0;
 
 int
 main(int argc, char* argv[])
@@ -36,6 +36,8 @@ main(int argc, char* argv[])
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
+    ("quiet", "be quiet")
+    ("debug", "write a lot of stupid debug messages")
     ("src", po::value<SocketOption>(), "Source")
     ("dst", po::value<SocketOption>(), "Destination")
   ;
@@ -50,6 +52,15 @@ main(int argc, char* argv[])
       return 1;
     }
 
+  if (vm.count("quiet"))
+    {
+      be_quiet = 1;
+    }
+
+  if (vm.count("debug"))
+    {
+      be_debug = 1;
+    }
 
   if (vm.count("src")) 
     {
@@ -59,14 +70,17 @@ main(int argc, char* argv[])
   if (vm.count("dst")) 
     {
       SocketOption sock = vm["dst"].as<SocketOption>();
-      if(sock.type == TCP)
+      if(!be_quiet)
         {
-          cout << "TCP Destination is " << sock.hostname << "," << sock.port << ".\n";
-        }
-      else
-        {
-          cout << "UNIX Destination is " << sock.file << ".\n";
-        }
+          if(sock.type == TCP)
+            {
+              cout << "TCP Destination is " << sock.hostname << "," << sock.port << ".\n";
+	    }
+	  else
+	    {
+	      cout << "UNIX Destination is " << sock.file << ".\n";
+	    }
+	}
       } 
     else 
       {
@@ -79,12 +93,18 @@ main(int argc, char* argv[])
 
   if(src.type == TCP)
     {
-      cout << "TCP Source is " << src.hostname << "," << src.port << ".\n";
+      if(!be_quiet)
+        {
+          cout << "TCP Source is " << src.hostname << "," << src.port << ".\n";
+	}
       bind_inet(lstn, src);
     }
   else
     {
-      cout << "UNIX Source is " << src.file << ".\n";
+      if(!be_quiet)
+        {
+          cout << "UNIX Source is " << src.file << ".\n";
+	}
       bind_unix(lstn, src);
     }
 
@@ -103,11 +123,24 @@ main(int argc, char* argv[])
     {
       int num = epoll_wait(epoll.fd, events.get(), max_events, -1);
 
+      if(be_debug)
+        {
+	  cout << "epoll events available (" << num << ")" << endl;
+	}
+
       for(int i = 0; i < num; ++i)
 	{
+	  if(be_debug)
+	    {
+	      cout << "process event " << i << endl;
+	    }
 	  if((events[i].data.fd == -1) 
 	     && (events[i].events & EPOLLIN))
 	    {
+	      if(be_debug)
+	        {
+                  cout << "EPOLLIN on listening socket .. create a new connection" << endl;
+		}
               boost::shared_ptr<Socket> target;
               boost::shared_ptr<Socket> source;
 	      try
@@ -156,23 +189,32 @@ main(int argc, char* argv[])
                   sockets.erase(source->fd);
                   continue;
 		}
+		if(be_debug)
+		  {
+		    cout << "new connection created" << endl;
+		  }
 	    }
 	  else
 	    {
 	      if(sockets[events[i].data.fd] == 0) 
 	        {
-//		  cerr << "already closed, ignore" << endl;
+		  if(be_debug)
+		    {
+		      cout << "fd " << events[i].data.fd << " already closed, ignore event " << i << endl;
+		    }
 		  continue;
 		}
-	      //lookup
+
 	      boost::shared_ptr<Socket> target(sockets[events[i].data.fd]);
 	      boost::shared_ptr<Socket> source(sockets[epoll.events[target->fd]->data.fd]);
+	      
 	      if((events[i].events & EPOLLIN )
 	         || (events[i].events & EPOLLPRI))
 		{
-		  // read -> write
-		  cout << "writer: "<< source->fd << endl;
-		  cout << "reader: "<< target->fd << endl;
+		  if(be_debug)
+		    {
+		      cout << "EPOLLIN or EPOLLPRI event from fd " << source->fd << " target is fd " << target->fd << endl;
+		    }
 		  try
 		    {
                       int len = recv(*source, buffer, 0);
@@ -181,21 +223,24 @@ main(int argc, char* argv[])
 		    }
 		  catch (SocketErr e)
 		    {
-		      // hangup
-//		      cout << "Socket Error, closing " <<  target->fd << " and " << source->fd << endl;
+		      if(be_debug)
+		        {
+			  cout << "Socket Error, closing socket" <<  target->fd << " and " << source->fd << endl;
+			}
 		      epoll.del(target->fd);
 		      epoll.del(source->fd);
 		      sockets.erase(target->fd);
 		      sockets.erase(source->fd);
-//		      cerr << "closed" << endl;
                       continue;
 		    }
 		}
 	      if((events[i].events & EPOLLERR)
 	         || (events[i].events & EPOLLHUP))
 		{
-		  // hangup
-//		  cout << target->fd << " closed by " << source->fd << endl;
+		  if(be_debug)
+                   {
+                      cout << "EPOLLERR or EPOLLHUP event from fd " << source->fd << " target is fd " << target->fd << " close both" << endl;
+                   }
 		  epoll.del(target->fd);
 		  epoll.del(source->fd);
 		  sockets.erase(target->fd);

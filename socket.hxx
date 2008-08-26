@@ -27,7 +27,7 @@ namespace xerxes
 {
   struct Socket : boost::noncopyable
   {
-    Socket(int fd);
+    explicit Socket(int fd);
     Socket(int domain,
 	   int type,
 	   int protocol);

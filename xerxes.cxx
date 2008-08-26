@@ -6,10 +6,6 @@
  * Maximilian Marx <mmarx@wh2.tu-dresden.de>
  */	
 
-/**
- * TODO : Closing of dockets does not work korrect
- */
-
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -181,10 +177,10 @@ main(int argc, char* argv[])
 	        {
 		  if (e.type != EPOLL_ADD_ERR_SOURCE)
 		    {
-		      epoll.del(target->fd);
+		      epoll.del(*target);
 		    }
-		  epoll.del(target->fd);
-                  epoll.del(source->fd);
+		  epoll.del(*target);
+                  epoll.del(*source);
                   sockets.erase(target->fd);
                   sockets.erase(source->fd);
                   continue;
@@ -227,8 +223,8 @@ main(int argc, char* argv[])
 		        {
 			  cout << "Socket Error, closing socket" <<  target->fd << " and " << source->fd << endl;
 			}
-		      epoll.del(target->fd);
-		      epoll.del(source->fd);
+		      epoll.del(*target);
+		      epoll.del(*source);
 		      sockets.erase(target->fd);
 		      sockets.erase(source->fd);
                       continue;
@@ -241,8 +237,8 @@ main(int argc, char* argv[])
                    {
                       cout << "EPOLLERR or EPOLLHUP event from fd " << source->fd << " target is fd " << target->fd << " close both" << endl;
                    }
-		  epoll.del(target->fd);
-		  epoll.del(source->fd);
+		  epoll.del(*target);
+		  epoll.del(*source);
 		  sockets.erase(target->fd);
 		  sockets.erase(source->fd);
                   continue;

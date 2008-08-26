@@ -38,6 +38,10 @@ namespace xerxes
       {
 	throw ConnCreateErr();
       }
+    if(be_debug)
+      {
+        std::cout << "socket with fd " << fd << " created" << std::endl;
+      }
   }
 
   Socket::~Socket()

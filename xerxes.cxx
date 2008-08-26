@@ -108,24 +108,54 @@ main(int argc, char* argv[])
 	  if((events[i].data.fd == -1) 
 	     && (events[i].events & EPOLLIN))
 	    {
-	      SocketOption dst = vm["dst"].as<SocketOption>();
-              boost::shared_ptr<Socket> target(dst.gen_socket());
-	      if (dst.type == TCP)
+              boost::shared_ptr<Socket> target;
+              boost::shared_ptr<Socket> source;
+	      try
 	        {
-                  connect_inet(*target, dst);
+	          SocketOption dst = vm["dst"].as<SocketOption>();
+                  target = boost::shared_ptr<Socket>(dst.gen_socket());
+	          if (dst.type == TCP)
+	            {
+                      connect_inet(*target, dst);
+	            }
+                  else
+	            {
+		      connect_unix(*target, dst);
+	            }
+	          sockets[target->fd] = target;
 		}
-              else
+	      catch (SocketErr)
 	        {
-		  connect_unix(*target, dst);
+                  continue;
 		}
-	      sockets[target->fd] = target;
 
-//              cerr << "accept!" << endl;
-	      boost::shared_ptr<Socket> source(accept(lstn, 0, 0));
+	      try 
+	        {
+	          source = boost::shared_ptr<Socket>(accept(lstn, 0, 0));
+	          sockets[source->fd] = source;
+                } 
+	      catch (SocketErr e)
+	        {
+	          sockets.erase(target->fd);
+                  continue;
+	        }
 
-	      sockets[source->fd] = source;
-
-              epoll.add(*source, *target);
+              try
+	        {
+                   epoll.add(*source, *target);
+	        }
+	      catch (EpollAddErr e)
+	        {
+		  if (e.type != EPOLL_ADD_ERR_SOURCE)
+		    {
+		      epoll.del(target->fd);
+		    }
+		  epoll.del(target->fd);
+                  epoll.del(source->fd);
+                  sockets.erase(target->fd);
+                  sockets.erase(source->fd);
+                  continue;
+		}
 	    }
 	  else
 	    {

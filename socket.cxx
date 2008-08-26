@@ -235,7 +235,10 @@ namespace xerxes
     hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
 
     getaddrinfo(opt.hostname.c_str(), opt.port.c_str(), &hints, &res);
-
+    
+    int so_opt = 1;
+    setsockopt(socket.fd, SOL_SOCKET, SO_REUSEADDR, (char*)&so_opt, sizeof(so_opt));
+    
     int ret = bind(socket, res->ai_addr, res->ai_addrlen);
 
     freeaddrinfo(res);

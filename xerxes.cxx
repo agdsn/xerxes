@@ -109,7 +109,7 @@ main(int argc, char* argv[])
 
   if(src.type == UNIX)
     {
-      chmod(src.file.c_str(), 0777);
+      chmod(src.file.c_str(), S_ISUID | S_ISGID | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
     }
 
   EPoll epoll;

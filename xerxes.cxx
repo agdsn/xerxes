@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
@@ -105,6 +106,11 @@ main(int argc, char* argv[])
     }
 
   listen(lstn, 3);
+
+  if(src.type == UNIX)
+    {
+      chmod(src.file.c_str(), 0777);
+    }
 
   EPoll epoll;
   epoll.add(lstn);

@@ -317,6 +317,7 @@ namespace xerxes
     memset(&adr, 0, sizeof(adr));
     adr.sun_family = AF_UNIX;
     strncpy(adr.sun_path, opt.file.c_str(), sizeof(adr.sun_path));
+
     return bind(socket, (struct sockaddr *) &adr, SUN_LEN(&adr));
   }
 

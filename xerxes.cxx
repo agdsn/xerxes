@@ -30,14 +30,9 @@ main(int argc, char* argv[])
   namespace po = boost::program_options;
   using namespace std;
   using namespace xerxes;
-  cout << "Hello, World!" << endl
-       << "ich kanns auch lassen, hier `Hello, World!' zu schreiben..." 
-       << endl;
-
 
   signal(SIGPIPE, SIG_IGN);
 
-  // Declare the supported options.
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
@@ -60,6 +55,7 @@ main(int argc, char* argv[])
     {
       SocketOption sock = vm["src"].as<SocketOption>();
     }
+
   if (vm.count("dst")) 
     {
       SocketOption sock = vm["dst"].as<SocketOption>();
@@ -80,6 +76,7 @@ main(int argc, char* argv[])
 
   SocketOption src = vm["src"].as<SocketOption>();
   Socket &lstn =  *(src.gen_socket());
+
   if(src.type == TCP)
     {
       cout << "TCP Source is " << src.hostname << "," << src.port << ".\n";
@@ -91,11 +88,7 @@ main(int argc, char* argv[])
       bind_unix(lstn, src);
     }
 
-  int ret = listen(lstn, 3);
-  if( ret != 0)
-    {
-      exit(1);
-    }
+  listen(lstn, 3);
 
   EPoll epoll;
   epoll.add(lstn);
@@ -117,10 +110,17 @@ main(int argc, char* argv[])
 	    {
 	      SocketOption dst = vm["dst"].as<SocketOption>();
               boost::shared_ptr<Socket> target(dst.gen_socket());
-              connect_inet(*target, dst);
+	      if (dst.type == TCP)
+	        {
+                  connect_inet(*target, dst);
+		}
+              else
+	        {
+		  connect_unix(*target, dst);
+		}
 	      sockets[target->fd] = target;
 
-              cerr << "accept!" << endl;
+//              cerr << "accept!" << endl;
 	      boost::shared_ptr<Socket> source(accept(lstn, 0, 0));
 
 	      sockets[source->fd] = source;
@@ -131,7 +131,7 @@ main(int argc, char* argv[])
 	    {
 	      if(sockets[events[i].data.fd] == 0) 
 	        {
-		  cerr << "already closed, ignore" << endl;
+//		  cerr << "already closed, ignore" << endl;
 		  continue;
 		}
 	      //lookup
@@ -152,12 +152,12 @@ main(int argc, char* argv[])
 		  catch (SocketErr e)
 		    {
 		      // hangup
-		      cout << "Socket Error, closing " <<  target->fd << " and " << source->fd << endl;
+//		      cout << "Socket Error, closing " <<  target->fd << " and " << source->fd << endl;
 		      epoll.del(target->fd);
 		      epoll.del(source->fd);
 		      sockets.erase(target->fd);
 		      sockets.erase(source->fd);
-		      cerr << "closed" << endl;
+//		      cerr << "closed" << endl;
                       continue;
 		    }
 		}
@@ -165,7 +165,7 @@ main(int argc, char* argv[])
 	         || (events[i].events & EPOLLHUP))
 		{
 		  // hangup
-		  cout << target->fd << " closed by " << source->fd << endl;
+//		  cout << target->fd << " closed by " << source->fd << endl;
 		  epoll.del(target->fd);
 		  epoll.del(source->fd);
 		  sockets.erase(target->fd);

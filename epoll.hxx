@@ -42,23 +42,32 @@ namespace xerxes
     std::map<int, event_t> events;
   };
 
-  enum epoll_add_err_type{
-    ADD_ERR_SINGLE,
-    ADD_ERR_SOURCE,
-    ADD_ERR_TARGET
+  enum epoll_add_err_type
+  {
+    EPOLL_ADD_ERR_SINGLE,
+    EPOLL_ADD_ERR_SOURCE,
+    EPOLL_ADD_ERR_TARGET
   };
 
-  class EpollErr{};
+  class EpollErr
+  {
+    public:
+    EpollErr();
+    EpollErr(std::string err);
+  };
   class EpollAddErr : public EpollErr {
     public:
-    EpollAddErr(){
-      EpollAddErr(ADD_ERR_SINGLE);
-    };
-    EpollAddErr(epoll_add_err_type t)
-      :type(t){};
+    EpollAddErr();
+    EpollAddErr(epoll_add_err_type t);
     epoll_add_err_type type;
   };
-  class EpollDelErr : public EpollErr {};
-  class EpollCreateErr : public EpollErr {};
+  class EpollDelErr : public EpollErr {
+    public:
+    EpollDelErr() : EpollErr("could not delete fd from epoll"){};
+  };
+  class EpollCreateErr : public EpollErr {
+    public:
+    EpollCreateErr() : EpollErr("could not create Epoll"){};
+  };
 }
 #endif

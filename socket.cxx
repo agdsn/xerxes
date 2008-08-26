@@ -20,7 +20,6 @@ namespace xerxes
 		int domain)
     : fd(socket(protocol, type, domain))
   {
-    std::cerr << "new socket" << std::endl;
     if(fd < 0)
       {
 	throw ConnCreateErr();
@@ -263,6 +262,6 @@ namespace xerxes
   }
   SocketErr::SocketErr(std::string err){
     std::cerr << "Socket Exception: " << err << std::endl;
-    perror("ERROR:");
+    perror("ERRNO");
   }
 }

@@ -40,9 +40,9 @@ namespace xerxes
     events[target.fd]->data.fd = source.fd;
     
     if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, source.fd, events[source.fd].get()))
-      throw EpollAddErr(); 
+      throw EpollAddErr(EPOLL_ADD_ERR_SOURCE); 
     if(0 != epoll_ctl(fd, EPOLL_CTL_ADD, target.fd, events[target.fd].get()))
-      throw EpollAddErr();
+      throw EpollAddErr(EPOLL_ADD_ERR_TARGET);
   }
 
   void
@@ -63,5 +63,26 @@ namespace xerxes
       throw EpollAddErr();
     events.erase(socket.fd);
   }
+
+  EpollErr::EpollErr()
+  {
+    EpollErr("unknown");
+  }
+
+  EpollErr::EpollErr(std::string err)
+  {
+    std::cerr << "Epoll Error: " << err << std::endl;
+    perror("ERRNO");
+  }
+  EpollAddErr::EpollAddErr()
+    {
+      EpollAddErr(ADD_ERR_SINGLE);
+    }
+  EpollAddErr::EpollAddErr(epoll_add_err_type t)
+    :EpollErr("could not add fd to epoll!"), type(t)
+  {
+    
+  }
+
   
 }

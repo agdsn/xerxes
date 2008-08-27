@@ -15,7 +15,7 @@ diff -Nrup a/xerxes_runner.rb b/xerxes_runner.rb
 -@config_file="xerxes.conf"
 -@bin_name="./xerxes"
 +@config_file="/etc/xerxes.conf"
-+@bin_name="/usr/sbin/xerxes"
++@bin_name="/usr/bin/xerxes"
  
  @log = Syslog.open('xerxes')
  

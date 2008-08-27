@@ -9,7 +9,7 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/xerxes_runner.rb
+DAEMON=/usr/bin/xerxes_runner.rb
 NAME=xerxes
 DESC=xerxes
 

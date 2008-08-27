@@ -2,8 +2,11 @@
 
 require 'syslog'
 
-@config_file="xerxes.conf"
-@bin_name="./xerxes"
+@config_file="/etc/xerxes.conf"
+@bin_name="/usr/bin/xerxes"
+
+Process.exit! if (!File.exist?(@bin_name))
+Process.exit! if (!File.exist?(@config_file))
 
 @log = Syslog.open('xerxes')
 

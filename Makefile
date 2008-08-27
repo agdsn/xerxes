@@ -8,7 +8,7 @@ BINDIR=/usr/bin/
 CONFDIR=/etc/
 
 $(BIN): $(OBJECTS)
-	g++ -o $(BIN) $(OBJECTS) -Wall -pedantic -ggdb -lboost_regex -lboost_program_options
+	g++ -o $(BIN) $(OBJECTS) -Wall -pedantic -O3 -lboost_regex -lboost_program_options
 
 all: $(BIN)
 

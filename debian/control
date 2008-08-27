@@ -1,0 +1,14 @@
+Source: xerxes
+Section: misc
+Priority: optional
+Maintainer: Jan Losinshi <software@wh2.tu-dresden.de>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: xerxes
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby1.8 | ruby1.9
+Conflicts: mysql-server, mysql-server-5.0
+Description: A sinple MySQL Relay
+ A Relay wo access a MySQL Server as it is
+ installed on the local machine

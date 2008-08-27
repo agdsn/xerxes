@@ -1,0 +1,21 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 51_incorrect-order.dpatch by Norbert Tretkowski <nobse@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: http://lists.mysql.com/commits/37246
+
+@DPATCH@
+diff -Nrup a/xerxes_runner.rb b/xerxes_runner.rb
+--- a/xerxes_runner.rb
++++ b/xerxes_runner.rb
+@@ -2,8 +2,8 @@
+ 
+ require 'syslog'
+ 
+-@config_file="xerxes.conf"
+-@bin_name="./xerxes"
++@config_file="/etc/xerxes.conf"
++@bin_name="/usr/sbin/xerxes"
+ 
+ @log = Syslog.open('xerxes')
+ 

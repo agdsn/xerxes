@@ -1,0 +1,16 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 51_incorrect-order.dpatch by Norbert Tretkowski <nobse@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: http://lists.mysql.com/commits/37246
+
+@DPATCH@
+diff -Nrup a/xerxes.conf b/xerxes.conf
+--- a/xerxes.conf
++++ b/xerxes.conf
+@@ -1,3 +1,3 @@
+ #tcp:127.0.0.1:13338 tcp:localhost:3306 quiet debug
+-tcp:127.0.0.1:13338 tcp:localhost:3306 quiet
+-unix:testfile tcp:localhost:3306 quiet
++tcp:127.0.0.1:13338 tcp:anyhost:3306 quiet
++unix:/var/run/mysqld/mysqld.sock tcp:anyhost:3306 quiet

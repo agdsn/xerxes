@@ -1,0 +1,6 @@
+xerxes (1.0-1) unstable; urgency=low
+
+  * Initial release as debian package
+
+ -- Jan Losinshi <software@wh2.tu-dresden.de>  Wed, 27 Aug 2008 19:29:12 +0200
+

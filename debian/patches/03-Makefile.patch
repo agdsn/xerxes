@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 51_incorrect-order.dpatch by Norbert Tretkowski <nobse@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: http://lists.mysql.com/commits/37246
+
+@DPATCH@
+diff --git a/Makefile b/Makefile
+index 40d68a6..930ee7c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,7 +8,7 @@ BINDIR=/usr/bin/
+ CONFDIR=/etc/
+ 
+ $(BIN): $(OBJECTS)
+-	g++ -o $(BIN) $(OBJECTS) -Wall -pedantic -ggdb -lboost_regex -lboost_program_options
++	g++ -o $(BIN) $(OBJECTS) -Wall -pedantic -O3 -lboost_regex -lboost_program_options
+ 
+ all: $(BIN)
+ 

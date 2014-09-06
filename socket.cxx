@@ -106,7 +106,7 @@ namespace xerxes
       } 
     else 
       {
-        throw validation_error("invalid value");
+        throw validation_error(validation_error::invalid_option_value);
       }        
   }
 

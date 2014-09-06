@@ -25,30 +25,24 @@ set -e
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid --chuid xerxes -b --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON
+	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid --exec $DAEMON
 	echo "$NAME."
 	;;
   force-reload)
 	# check wether $DAEMON is running. If so, restart
-	start-stop-daemon --stop --test --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON \
-	&& $0 restart \
+	start-stop-daemon --stop --test --quiet --pidfile /var/run/$NAME.pid --exec $DAEMON && $0 restart \
 	|| exit 0
 	;;
   restart)
     echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON
+	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid --exec $DAEMON
 	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid --chuid xerxes -b --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   *)

@@ -1,4 +1,17 @@
 #! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          xerxes
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:      $network $named
+# Should-Stop:       $network $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Xerxes mysql forwars
+# Description:       Go away
+### END INIT INFO
+
 # xerxes init script
 #		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
 #		Modified for Debian 
